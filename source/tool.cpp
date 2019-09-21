@@ -30,3 +30,10 @@ int32_t ip_port_t::from_UInt64(uint64_t UInt64_ip_port) {
     return 0;
 }
 
+void ip_port_netorder2uint64(const uint32_t& ip_netorder, const uint32_t& port_netorder, uint64_t& UInt64_ip_port){
+    uint32_t port_hostorder = ntohl(port_netorder);
+    UInt64_ip_port = ip_netorder;
+    UInt64_ip_port <<= 32u;
+    UInt64_ip_port += port_hostorder;
+}
+
