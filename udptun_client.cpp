@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "connection_manager.h"
+#include "tool.h"
 
 const size_t LISTEN_PORT = 9999;
 const std::string local_ip = "127.0.0.1";
@@ -17,73 +18,6 @@ const size_t remote_port = 9877;
 // const std::string remote_ip = "107.182.186.209";
 // const size_t remote_port = 9999;
 // const size_t remote_port = 21259;
-// const size_t BUFSIZE = 1024;
-
-int set_non_blocking(const int &fd) {
-    int opts = -1;
-    opts = fcntl(fd, F_GETFL);
-
-    if (opts < 0) {
-        LOG(ERROR) << "get socket status failed, fd:" << fd
-                   << " error:" << strerror(errno);
-        return -1;
-    }
-    opts = opts | O_NONBLOCK;
-    if (fcntl(fd, F_SETFL, opts) < 0) {
-        LOG(ERROR) << "set socket non_blocking failed, fd:" << fd
-                   << " error:" << strerror(errno);
-        return -1;
-    }
-}
-
-int new_listen_socket(const std::string &ip, const size_t &port, int& fd) {
-    fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (fd == -1) {
-        LOG(ERROR) << "create new socket failed" << strerror(errno);
-        return -1;
-    }
-    struct sockaddr_in local_addr = {0};
-    socklen_t slen = sizeof(local_addr);
-    local_addr.sin_addr.s_addr = inet_addr(ip.c_str());
-    local_addr.sin_family = AF_INET;
-    local_addr.sin_port = htons(port);
-
-    if (bind(fd, (struct sockaddr *) &local_addr, slen) == -1) {
-        LOG(ERROR) << "socket bind error port:" << port
-                   << " error:" << strerror(errno);
-        return -1;
-    }
-    set_non_blocking(fd);
-    LOG(INFO) << "local socket listen_fd:" << fd;
-}
-
-int new_connected_socket( const std::string &remote_ip,
-                         const size_t &remote_port,int &fd) {
-    LOG(INFO) << "remote ip:" << remote_ip << " port:" << remote_port;
-    struct sockaddr_in remote_addr_in = {0};
-    socklen_t slen = sizeof(remote_addr_in);
-    remote_addr_in.sin_addr.s_addr = inet_addr(remote_ip.c_str());
-    remote_addr_in.sin_family = AF_INET;
-    remote_addr_in.sin_port = htons(remote_port);
-
-    fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (fd < 0) {
-        LOG(ERROR) << "create new socket failed" << strerror(errno);
-        return -1;
-    }
-    int ret = connect(fd, (struct sockaddr *) &remote_addr_in, slen);
-    if (ret < 0) {
-        ///实际上connect基本不会失败,因为内核只做一些基本的检查,比如参数是否合法,ip是否有效等等,
-        ///之后内核就创建相应数据结构,并且返回,并没有真的去连接那个ip和port
-        LOG(ERROR) << "failed to establish connection to remote, error:"
-                   << strerror(errno);
-        close(fd);
-        return -1;
-    }
-    set_non_blocking(fd);
-    LOG(INFO) << "create new remote connection udp_fd:" << fd;
-    return 0;
-}
 
 void run() {
     int epoll_fd = -1;
