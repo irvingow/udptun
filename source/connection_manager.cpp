@@ -13,6 +13,14 @@ int32_t ConnectionManager::AddConnection(const ip_port_t &ip_port) {
         LOG(ERROR) << "invalid ip_port ip:" << ip_port.ip << " port:" << ip_port.port;
         return -1;
     }
+    /// 这里必须判断ip_port对应的连接是否已经存在,如果已经有对应的连接存在,直接覆盖之前的connection
+    /// 会导致内存泄露,因为random_number不一致,所以前面一个连接的conn_id肯定和后面的不一样,所以
+    /// 前一个连接的conn_id对应的智能指针没有析构,进而导致内存泄露
+    auto uint64_iter = UInt64_ip_port_Conn_map_.find(UInt64_ip_port);
+    if(uint64_iter != UInt64_ip_port_Conn_map_.end()){
+        LOG(WARNING) << "ip:" << ip_port.ip << " port:"<<ip_port.port<<" connection already exist!";
+        return -1;
+    }
     auto random_num_gen = RandomNumberGenerator::GetInstance();
     uint32_t unique_conn_id;
     int32_t ret = random_num_gen->GetRandomNumberNonZero(unique_conn_id);
@@ -27,12 +35,24 @@ int32_t ConnectionManager::AddConnection(const ip_port_t &ip_port) {
     std::shared_ptr<Connection> sp_conn(new Connection(ip_port, unique_conn_id));
     UInt64_ip_port_Conn_map_[UInt64_ip_port] = sp_conn;
     unique_conn_id_map_[unique_conn_id] = sp_conn;
+    if(UInt64_ip_port_Conn_map_.size() != unique_conn_id_map_.size()){
+        LOG(ERROR)<<"this should not happen, UInt64_ip_port_Conn_map size is not equal to unique_conn_id_map size";
+        return -1;
+    }
     return 0;
 }
 
 int32_t ConnectionManager::AddConnection(const uint64_t &uint64_ip_port) {
     ip_port_t ip_port;
     ip_port.from_UInt64(uint64_ip_port);
+    auto uint64_iter = UInt64_ip_port_Conn_map_.find(uint64_ip_port);
+    /// 这里必须判断ip_port对应的连接是否已经存在,如果已经有对应的连接存在,直接覆盖之前的connection
+    /// 会导致内存泄露,因为random_number不一致,所以前面一个连接的conn_id肯定和后面的不一样,所以
+    /// 前一个连接的conn_id对应的智能指针没有析构,进而导致内存泄露
+    if(uint64_iter != UInt64_ip_port_Conn_map_.end()){
+        LOG(WARNING) << "ip:" << ip_port.ip << " port:"<<ip_port.port<<" connection already exist!";
+        return -1;
+    }
     auto random_num_gen = RandomNumberGenerator::GetInstance();
     uint32_t unique_conn_id;
     int32_t ret = random_num_gen->GetRandomNumberNonZero(unique_conn_id);
@@ -47,6 +67,10 @@ int32_t ConnectionManager::AddConnection(const uint64_t &uint64_ip_port) {
     std::shared_ptr<Connection> sp_conn(new Connection(ip_port, unique_conn_id));
     UInt64_ip_port_Conn_map_[uint64_ip_port] = sp_conn;
     unique_conn_id_map_[unique_conn_id] = sp_conn;
+    if(UInt64_ip_port_Conn_map_.size() != unique_conn_id_map_.size()){
+        LOG(ERROR)<<"this should not happen, UInt64_ip_port_Conn_map size is not equal to unique_conn_id_map size";
+        return -1;
+    }
     return 0;
 }
 
