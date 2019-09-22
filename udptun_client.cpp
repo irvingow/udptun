@@ -55,13 +55,7 @@ void run() {
                   << strerror(errno);
         return;
     }
-
-    ConnectionManager remote_connection_manager(remote_connected_fd);
-    ip_port_t remote_ip_port;
-    remote_ip_port.ip = remote_ip;
-    remote_ip_port.port = remote_port;
-    remote_connection_manager.AddConnection(remote_ip_port);
-    ConnectionManager local_connection_manager(local_listen_fd);
+    ConnectionManager connection_manager(local_listen_fd, remote_connected_fd);
     while (1) {
         int nfds = epoll_wait(epoll_fd, events, max_events, -1);
         if (nfds < 0) {
@@ -78,14 +72,12 @@ void run() {
             if (events[index].data.fd == remote_connected_fd) {
                 ///接收到来自远端的消息
                 ret = -1;
-                bzero(local_connection_manager.buf_, sizeof(local_connection_manager.buf_));
-                ret = recv(remote_connected_fd, local_connection_manager.buf_, BUF_SIZE, 0);
+                bzero(connection_manager.recv_buf_, sizeof(connection_manager.recv_buf_));
+                ret = recv(remote_connected_fd, connection_manager.recv_buf_, sizeof(connection_manager.recv_buf_), 0);
                 if (ret > 0) {
-                    local_connection_manager.buf_len_ = ret;
-                    LOG(INFO) << "receive data:"
-                              << local_connection_manager.buf_;
+                    connection_manager.recv_buf_len_ = ret;
                     ///通知local_connection_manager有数据到达,需要将数据回送到之前请求该数据的地址
-                    local_connection_manager.SendMesgToLocal();
+                    connection_manager.SendMesgToLocal();
                     /// TODO
                 } else {
                     if (ret == 0) {
@@ -105,24 +97,25 @@ void run() {
             } else if (events[index].data.fd == local_listen_fd) {
                 ///接收到来自本地的消息
                 ret = -1;
-                bzero(remote_connection_manager.buf_, BUF_SIZE);
-                sockaddr addr;
+                bzero(connection_manager.send_buf_, BUF_SIZE);
+                sockaddr_in addr;
                 socklen_t slen = sizeof(addr);
-                ret = recvfrom(local_listen_fd, remote_connection_manager.buf_,
-                               BUF_SIZE, 0, &addr, &slen);
+                ret = recvfrom(local_listen_fd, connection_manager.send_buf_,
+                               BUF_SIZE, 0, (sockaddr *) &addr, &slen);
                 if (ret > 0) {
-                    remote_connection_manager.buf_len_ = ret;
-                    sockaddr_in *temp = (sockaddr_in *) &addr;
+                    connection_manager.send_buf_len_ = ret;
                     uint64_t UInt64_ip_port = 0;
-                    ip_port_netorder2uint64(temp->sin_addr.s_addr, temp->sin_port, UInt64_ip_port);
+                    ip_port_netorder2uint64(addr.sin_addr.s_addr, addr.sin_port, UInt64_ip_port);
                     ///这里查看local_connection_manager中是否存在该连接,不存在的话就新增连接
-                    if (!local_connection_manager.Exist(UInt64_ip_port)) {
-                        local_connection_manager.AddConnection(UInt64_ip_port);
+                    if (!connection_manager.Exist(UInt64_ip_port)) {
+                        connection_manager.AddConnection(UInt64_ip_port);
                     }
-                    LOG(INFO) << "receive data:"
-                              << remote_connection_manager.buf_;
+                    ip_port_t local_ip_port;
+                    local_ip_port.from_UInt64(UInt64_ip_port);
+                    LOG(INFO) << "receive from ip:" << local_ip_port.ip << " port:" << local_ip_port.port << " data:"
+                              << connection_manager.send_buf_;
                     ///通知remote_connection_manager有消息需要发送给远端
-                    remote_connection_manager.SendMesgToRemote(UInt64_ip_port);
+                    connection_manager.SendMesgToRemote(UInt64_ip_port);
                 } else {
                     if (ret == 0) {
                         ///对于udp协议来说,由于其无连接性,所以ret为0是正常情况,对于tcp来说ret=0则代表连接断开

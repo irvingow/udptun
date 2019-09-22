@@ -8,11 +8,12 @@
 #include <boost/noncopyable.hpp>
 #include <cstdint>
 
+///单例模式实现
 class RandomNumberGenerator : public boost::noncopyable {
  public:
   static RandomNumberGenerator *GetInstance();
-  int32_t GetRandomNumber(uint32_t& random_number);
-  int32_t GetRandomNumberNonZero(uint32_t& random_number);
+  int32_t GetRandomNumber(uint32_t &random_number);
+  int32_t GetRandomNumberNonZero(uint32_t &random_number);
 
  protected:
   struct Obj_Creator {
