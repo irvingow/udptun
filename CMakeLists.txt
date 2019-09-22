@@ -12,4 +12,5 @@ link_directories("/home/lwj/Documents/installed/boost/lib")
 
 link_libraries("glog")
 
-add_executable(udptun_client udptun_client.cpp source/tool.cpp source/connection_manager.cpp source/connection.cpp)
+add_executable(udptun_client udptun_client.cpp source/tool.cpp source/connection_manager.cpp
+        source/connection.cpp source/random_generator.cpp)

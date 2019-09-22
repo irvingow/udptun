@@ -92,12 +92,11 @@ void run() {
                         ///对于udp协议来说,由于其无连接性,所以ret为0是正常情况,对于tcp来说ret=0则代表连接断开
                     } else {
                         if (errno == EAGAIN) {
-                            LOG_FIRST_N(INFO, 20) << "try again";
+                            LOG(INFO) << "try again";
                             continue;
                         }
-                        // LOG(WARNING) << "receive data failed error:" << strerror(errno);
-                        LOG_FIRST_N(WARNING, 10) << "receive data failed error:"
-                                                 << strerror(errno);
+                        LOG(WARNING) << "receive data failed error:"
+                                     << strerror(errno);
                     }
                     // epoll_ctl(epoll_fd, EPOLL_CTL_DEL, remote_connected_fd, nullptr);
                     ///只要不调用close,内核中由于之前对remote_connected_fd调用connect而保存的对端ip和port都一直存在
@@ -114,10 +113,10 @@ void run() {
                 if (ret > 0) {
                     remote_connection_manager.buf_len_ = ret;
                     sockaddr_in *temp = (sockaddr_in *) &addr;
-                    uint64_t  UInt64_ip_port = 0;
+                    uint64_t UInt64_ip_port = 0;
                     ip_port_netorder2uint64(temp->sin_addr.s_addr, temp->sin_port, UInt64_ip_port);
                     ///这里查看local_connection_manager中是否存在该连接,不存在的话就新增连接
-                    if(!local_connection_manager.Exist(UInt64_ip_port)){
+                    if (!local_connection_manager.Exist(UInt64_ip_port)) {
                         local_connection_manager.AddConnection(UInt64_ip_port);
                     }
                     LOG(INFO) << "receive data:"

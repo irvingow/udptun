@@ -29,6 +29,7 @@ class ConnectionManager : public boost::noncopyable {
  private:
   ///保存所有ip和port转化为的uint64_t值及其映射到的connection
   std::unordered_map<uint64_t, std::shared_ptr<Connection>> UInt64_ip_port_Conn_map_;
+  std::unordered_map<uint32_t , std::shared_ptr<Connection>> unique_conn_id_map_;
   uint32_t fd_;
 };
 
