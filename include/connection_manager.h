@@ -16,15 +16,15 @@ class ConnectionManager : public boost::noncopyable {
   int32_t RemoveConnection(const ip_port_t &ip_port);
   bool Exist(const ip_port_t &ip_port) const;
   bool Exist(const uint64_t &uint64_ip_port) const;
-  ///通知ConnectionManager已经有新的数据到达,可以选择发送数据
   ///接收到来自远端的数据,将数据回送到请求该数据的地址
   void SendMesgToLocal();
+  ///通知ConnectionManager已经有新的数据到达,可以选择发送数据,注意参数并不是远端地址,而是收到的消息的来源地址
   void SendMesgToRemote(const uint64_t& uint64_ip_port);
-  ///将ip和port组成的uint64类型的数据写入到即将要发送的数据中去
-  int32_t PutUInt64IpPortToData(const uint64_t& uint64_ip_port);
-  ///从数据包中获得这个数据包的应该被发送到的本地地址
+  ///将connection对应的唯一id数据写入到即将要发送的数据中去
+  int32_t PutConnIdToData(const uint64_t & uint64_ip_port);
+  ///从数据包中获得这个数据包的应该被发送到的地址
   int32_t GetIpPortFromData(ip_port_t &ip_port);
-  char buf_[BUF_SIZE];
+  char buf_[BUF_SIZE+4];
   uint32_t buf_len_;
  private:
   ///保存所有ip和port转化为的uint64_t值及其映射到的connection
