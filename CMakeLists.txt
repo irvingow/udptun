@@ -9,8 +9,16 @@ include_directories(./include/)
 include_directories(/home/lwj/Documents/installed/boost/include/)
 
 link_directories("/home/lwj/Documents/installed/boost/lib")
-
 link_libraries("glog")
 
-add_executable(udptun_client udptun_client.cpp source/tool.cpp source/connection_manager.cpp
-        source/connection.cpp source/random_generator.cpp)
+aux_source_directory(./source/ source_list)
+
+add_executable(udptun_client samples/udptun_client.cpp ${source_list})
+add_executable(udptun_server samples/udptun_server.cpp ${source_list})
+
+#file(GLOB_RECURSE mains RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/samples/*.cpp")
+#foreach(mainfile IN LISTS mains)
+#     Get file name without directory
+#    get_filename_component(mainname ${mainfile} NAME_WE)
+#    add_executable(${mainname} ${mainfile} ${source_list})
+#endforeach()
