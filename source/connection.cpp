@@ -9,8 +9,8 @@
 
 Connection::Connection(const ip_port_t &ip_port,
                        const uint32_t &unique_conn_id,
-                       const uint32_t &local_listen_fd,
-                       const uint32_t &remote_connected_fd) {
+                       const int32_t &local_listen_fd,
+                       const int32_t &remote_connected_fd) {
     connection_ip_port_ = ip_port;
     unique_connection_id_ = unique_conn_id;
     local_listen_fd_ = local_listen_fd;
@@ -23,8 +23,8 @@ Connection::Connection(const ip_port_t &ip_port,
 
 Connection::Connection(const uint64_t &UInt64_ip_port,
                        const uint32_t &unique_conn_id,
-                       const uint32_t &local_listen_fd,
-                       const uint32_t &remote_connected_fd) {
+                       const int32_t &local_listen_fd,
+                       const int32_t &remote_connected_fd) {
     connection_ip_port_.from_UInt64(UInt64_ip_port);
     unique_connection_id_ = unique_conn_id;
     local_listen_fd_ = local_listen_fd;

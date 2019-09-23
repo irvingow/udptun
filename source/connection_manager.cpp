@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include "random_generator.h"
 
-ConnectionManager::ConnectionManager(const uint32_t &local_listen_fd, const uint32_t &remote_connected_fd) {
+ConnectionManager::ConnectionManager(const int32_t &local_listen_fd, const int32_t &remote_connected_fd) {
     local_listen_fd_ = local_listen_fd;
     remote_connected_fd_ = remote_connected_fd;
     bzero(recv_buf_, BUF_SIZE);

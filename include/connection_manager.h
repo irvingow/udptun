@@ -10,7 +10,7 @@
 
 class ConnectionManager : public boost::noncopyable {
  public:
-  explicit ConnectionManager(const uint32_t &local_listen_fd, const uint32_t& remote_connected_fd);
+  explicit ConnectionManager(const int32_t &local_listen_fd, const int32_t& remote_connected_fd);
   int32_t AddConnection(const ip_port_t &ip_port);
   int32_t AddConnection(const uint64_t &uint64_ip_port);
   int32_t RemoveConnection(const ip_port_t &ip_port);
@@ -32,8 +32,8 @@ class ConnectionManager : public boost::noncopyable {
   ///保存所有ip和port转化为的uint64_t值及其映射到的connection
   std::unordered_map<uint64_t, std::shared_ptr<Connection>> UInt64_ip_port_Conn_map_;
   std::unordered_map<uint32_t, std::shared_ptr<Connection>> unique_conn_id_map_;
-  uint32_t local_listen_fd_;
-  uint32_t remote_connected_fd_;
+  int32_t local_listen_fd_;
+  int32_t remote_connected_fd_;
 };
 
 #endif
