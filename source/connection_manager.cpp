@@ -180,6 +180,7 @@ int32_t ConnectionManager::GetIpPortFromData(ip_port_t &ip_port) {
     memcpy(&netorder_conn_id, recv_buf_, sizeof(netorder_conn_id));
     recv_buf_len_ -= sizeof(netorder_conn_id);
     memmove(recv_buf_, recv_buf_ + sizeof(netorder_conn_id), recv_buf_len_);
+    recv_buf_[recv_buf_len_] = 0;
     uint32_t unique_conn_id = (netorder_conn_id);
     auto iter = unique_conn_id_map_.find(unique_conn_id);
     if (iter == unique_conn_id_map_.end()) {

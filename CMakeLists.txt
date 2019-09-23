@@ -14,7 +14,6 @@ link_libraries("glog")
 aux_source_directory(./source/ source_list)
 
 add_executable(udptun_client samples/udptun_client.cpp ${source_list})
-add_executable(udptun_server samples/udptun_server.cpp ${source_list})
 
 #file(GLOB_RECURSE mains RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/samples/*.cpp")
 #foreach(mainfile IN LISTS mains)
