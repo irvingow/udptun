@@ -5,35 +5,34 @@
 #include <set>
 #include <unordered_map>
 #include <memory>
+#include <unordered_set>
 #include "connection.h"
 #include "tool.h"
 
 class ConnectionManager : public boost::noncopyable {
  public:
-  explicit ConnectionManager(const int32_t &local_listen_fd, const int32_t& remote_connected_fd);
-  int32_t AddConnection(const ip_port_t &ip_port);
-  int32_t AddConnection(const uint64_t &uint64_ip_port);
-  int32_t RemoveConnection(const ip_port_t &ip_port);
-  bool Exist(const ip_port_t &ip_port) const;
-  bool Exist(const uint64_t &uint64_ip_port) const;
-  ///接收到来自远端的数据,将数据回送到请求该数据的地址
-  void SendMesgToLocal();
-  ///通知ConnectionManager已经有新的数据到达,可以选择发送数据到远端,注意参数并不是远端地址,而是收到的消息的来源地址
-  void SendMesgToRemote(const uint64_t &uint64_ip_port);
-  ///将connection对应的唯一id数据写入到即将要发送的数据中去
-  int32_t PutConnIdToData(const uint64_t &uint64_ip_port);
-  ///从数据包中获得这个数据包的应该被发送到的地址
-  int32_t GetIpPortFromData(ip_port_t &ip_port);
+  ConnectionManager(const int32_t& epoll_fd,const ip_port_t& remote_ip_port, const int32_t& listen_fd, const int32_t& connected_fd);
+  int32_t AddConnection(const ip_port_t &ip_port, const int32_t &listen_fd, const int32_t &connected_fd, const uint32_t& conn_id);
+  int32_t ConnectionAddConnectedFd(const ip_port_t& ip_port, const int32_t& connected_fd, const uint32_t& conn_id);
+  bool Exist(const uint64_t& uint64_ip_port);
+  void GotDataWithConnIdFromClient();
+  void GotDataWithoutConnIdFromClient();
+  void GotDataWithConnIdFromServer();
+  void GotDataWithoutConnIdFromServer(const int32_t& connected_fd);
   char recv_buf_[BUF_SIZE + 4];
   uint32_t recv_buf_len_;
   char send_buf_[BUF_SIZE + 4];
   uint32_t send_buf_len_;
  private:
-  ///保存所有ip和port转化为的uint64_t值及其映射到的connection
-  std::unordered_map<uint64_t, std::shared_ptr<Connection>> UInt64_ip_port_Conn_map_;
-  std::unordered_map<uint32_t, std::shared_ptr<Connection>> unique_conn_id_map_;
-  int32_t local_listen_fd_;
-  int32_t remote_connected_fd_;
+  std::unordered_map<uint64_t, std::shared_ptr<Connection>> uint64_ip_port2conn_hashmap_;
+  std::unordered_map<uint64_t, std::unordered_set<uint32_t> > uint64_ip_port2conn_ids_hashmap_;
+  std::unordered_map<int32_t , uint64_t > connected_fd2uint64_ip_port_hashmap_;///for udptun server only
+  std::unordered_map<int32_t ,uint32_t > connected_fd2conn_id_hashmap_;///for udptun server only
+  std::unordered_map<uint32_t , uint64_t > conn_id2uin64_ip_port_hashmap_;///for udptun client only
+  int32_t epoll_fd_;
+  int32_t listen_fd_;
+  int32_t connected_fd_;///for udptun server this is -1, for udptun client this is valid, connects to the remote udptun server
+  ip_port_t server_ip_port_;
 };
 
 #endif

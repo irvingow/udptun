@@ -18,6 +18,8 @@ typedef struct {
   int32_t from_UInt64(uint64_t UInt64_ip_port);
 } ip_port_t;
 
+int32_t AddEvent2Epoll(const int32_t& epoll_fd , const int32_t& fd, const uint32_t& events);
+
 ///将网络字节序的ip和port转化为uint64_t类型的数据,结果与将ip和port转为主机序后调用ip_port_t的to_UInt64结果相同
 void ip_port_netorder2uint64(const uint32_t &ip_netorder, const uint32_t &port_netorder, uint64_t &UInt64_ip_port);
 
@@ -26,5 +28,9 @@ int set_non_blocking(const int &fd);
 int new_listen_socket(const std::string &ip, const size_t &port, int &fd);
 
 int new_connected_socket(const std::string &remote_ip, const size_t &remote_port, int &fd);
+
+int32_t GetConnIdFromData(uint32_t& conn_id,char *buf, uint32_t &buf_len);
+
+int32_t PutConnIdIntoData(const uint32_t& conn_id, char *buf, uint32_t& buf_len);
 
 #endif //UDPTUN_TOOL_H

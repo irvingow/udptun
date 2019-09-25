@@ -33,11 +33,23 @@ int32_t ip_port_t::from_UInt64(uint64_t UInt64_ip_port) {
     return 0;
 }
 
-void ip_port_netorder2uint64(const uint32_t& ip_netorder, const uint32_t& port_netorder, uint64_t& UInt64_ip_port){
+void ip_port_netorder2uint64(const uint32_t &ip_netorder, const uint32_t &port_netorder, uint64_t &UInt64_ip_port) {
     uint32_t port_hostorder = ntohs(port_netorder);
     UInt64_ip_port = ip_netorder;
     UInt64_ip_port <<= 32u;
     UInt64_ip_port += port_hostorder;
+}
+
+int32_t AddEvent2Epoll(const int32_t &epoll_fd, const int32_t &fd, const uint32_t &events) {
+    struct epoll_event ev;
+    ev.events = events;
+    ev.data.fd = fd;
+    auto ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev);
+    if (ret != 0) {
+        LOG(INFO) << "add fd" << fd << " to epoll_fd:" << epoll_fd << " failed, error:" << strerror(errno);
+        return -1;
+    }
+    return 0;
 }
 
 int set_non_blocking(const int &fd) {
@@ -57,8 +69,7 @@ int set_non_blocking(const int &fd) {
     }
 }
 
-
-int new_listen_socket(const std::string &ip, const size_t &port, int& fd) {
+int new_listen_socket(const std::string &ip, const size_t &port, int &fd) {
     fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd == -1) {
         LOG(ERROR) << "create new socket failed" << strerror(errno);
@@ -79,8 +90,8 @@ int new_listen_socket(const std::string &ip, const size_t &port, int& fd) {
     LOG(INFO) << "local socket listen_fd:" << fd;
 }
 
-int new_connected_socket( const std::string &remote_ip,
-                          const size_t &remote_port,int &fd) {
+int new_connected_socket(const std::string &remote_ip,
+                         const size_t &remote_port, int &fd) {
     LOG(INFO) << "remote ip:" << remote_ip << " port:" << remote_port;
     struct sockaddr_in remote_addr_in = {0};
     socklen_t slen = sizeof(remote_addr_in);
@@ -106,3 +117,53 @@ int new_connected_socket( const std::string &remote_ip,
     LOG(INFO) << "create new remote connection udp_fd:" << fd;
     return 0;
 }
+
+int32_t GetConnIdFromData(uint32_t &conn_id, char *buf, uint32_t &buf_len) {
+    if (buf_len < 4) {
+        LOG(ERROR) << " error get ConnId from data, data length should not less than 4 bytes";
+        return -1;
+    }
+    uint32_t network_order_conn_id = 0;
+    memcpy(&network_order_conn_id, buf, sizeof(network_order_conn_id));
+    buf_len -= sizeof(network_order_conn_id);
+    memmove(buf, buf + sizeof(network_order_conn_id), buf_len);
+    buf[buf_len] = 0;
+    conn_id = network_order_conn_id;
+    return 0;
+}
+
+int32_t PutConnIdIntoData(const uint32_t &conn_id, char *buf, uint32_t &buf_len) {
+    if (buf_len > BUF_SIZE) {
+        LOG(WARNING) << "data length may be too long";
+    }
+    uint32_t network_order_conn_id = conn_id;
+    memmove(buf + sizeof(network_order_conn_id), buf, buf_len);
+    memcpy(buf, &network_order_conn_id, sizeof(network_order_conn_id));
+    buf_len += sizeof(network_order_conn_id);
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

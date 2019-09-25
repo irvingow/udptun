@@ -3,7 +3,7 @@ project(udptun)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11")
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -g")
 
 include_directories(./include/)
 include_directories(/home/lwj/Documents/installed/boost/include/)
@@ -14,6 +14,7 @@ link_libraries("glog")
 aux_source_directory(./source/ source_list)
 
 add_executable(udptun_client samples/udptun_client.cpp ${source_list})
+add_executable(udptun_server samples/udptun_server.cpp ${source_list})
 
 #file(GLOB_RECURSE mains RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/samples/*.cpp")
 #foreach(mainfile IN LISTS mains)
