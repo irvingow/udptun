@@ -8,7 +8,7 @@
 #include <boost/noncopyable.hpp>
 #include <cstdint>
 
-///单例模式实现
+///boost单例模式实现
 class RandomNumberGenerator : public boost::noncopyable {
  public:
   static RandomNumberGenerator *GetInstance();

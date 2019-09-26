@@ -9,18 +9,21 @@
 #include <sys/socket.h>
 #include <unordered_set>
 #include "connection_manager.h"
+#include "parse_config.h"
 #include "random_generator.h"
 #include "tool.h"
 
-const std::string local_listen_ip("127.0.0.1");
-const size_t local_port = 9877;
-const std::string remote_connected_ip("127.0.0.1");
-const size_t remote_port = 15124;
-// const std::string remote_ip = "107.182.186.209";
-// const size_t remote_port = 9999;
-// const size_t remote_port = 21259;
-
-void run() {
+void run(const std::string& config_file_path) {
+    SystemConfig* instance = SystemConfig::GetInstance(config_file_path);
+    auto system_config = instance->system_config();
+    if(!system_config->parse_flag){
+        LOG(ERROR)<<"failed to parse config file";
+        return;
+    }
+    const std::string local_ip = system_config->listen_ip;
+    const size_t local_port = system_config->listen_port;
+    const std::string remote_ip = system_config->remote_ip;
+    const size_t remote_port = system_config->remote_port;
     int epoll_fd = -1;
     epoll_fd = epoll_create1(0);
     if (epoll_fd < 0) {
@@ -28,7 +31,7 @@ void run() {
         return;
     }
     int local_listen_fd = -1;
-    new_listen_socket(local_listen_ip, local_port, local_listen_fd);
+    new_listen_socket(local_ip, local_port, local_listen_fd);
     const int max_events = 4096;
     struct epoll_event events[max_events];
     auto ret = AddEvent2Epoll(epoll_fd, local_listen_fd, EPOLLIN);
@@ -39,7 +42,7 @@ void run() {
     }
     int remote_connected_fd = -1;
     ip_port_t remote_ip_port;
-    remote_ip_port.ip = remote_connected_ip;
+    remote_ip_port.ip = remote_ip;
     remote_ip_port.port = remote_port;
     ///对于udptun_server端来说,remote_connected_fd是不需要一开始就创建的(而是根据udptun_client
     /// 客户端中本地连接的个数来确定的),所以初始化为-1,避免被使用)
@@ -72,6 +75,11 @@ void run() {
 int main(int argc, char const *argv[]) {
     google::InitGoogleLogging("INFO");
     FLAGS_logtostderr = true;
-    run();
+    if(argc != 2){
+        LOG(ERROR)<<"usage:"<<argv[0]<<" config_json_path";
+        return 0;
+    }
+    const std::string config_file_path(argv[1]);
+    run(config_file_path);
     return 0;
 }

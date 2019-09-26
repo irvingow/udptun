@@ -9,17 +9,19 @@
 #include <unistd.h>
 #include "connection_manager.h"
 #include "tool.h"
+#include "parse_config.h"
 
-const size_t LISTEN_PORT = 9999;
-const std::string local_ip = "127.0.0.1";
-const size_t local_port = 9999;
-const std::string remote_ip = "127.0.0.1";
-const size_t remote_port = 9877;
-// const std::string remote_ip = "107.182.186.209";
-// const size_t remote_port = 9999;
-// const size_t remote_port = 21259;
-
-void run() {
+void run(const std::string& config_file_path) {
+    SystemConfig* instance = SystemConfig::GetInstance(config_file_path);
+    auto system_config = instance->system_config();
+    if(!system_config->parse_flag){
+        LOG(ERROR)<<"failed to parse config file";
+        return;
+    }
+    const std::string local_ip = system_config->listen_ip;
+    const size_t local_port = system_config->listen_port;
+    const std::string remote_ip = system_config->remote_ip;
+    const size_t remote_port = system_config->remote_port;
     int epoll_fd = -1;
     epoll_fd = epoll_create1(0);
     if (epoll_fd < 0) {
@@ -37,7 +39,7 @@ void run() {
         return;
     }
     int remote_connected_fd = -1;
-    ret = new_connected_socket(remote_ip, remote_port, remote_connected_fd);
+    ret = new_connected_socket(system_config->remote_ip, system_config->remote_port, remote_connected_fd);
     if (ret != 0) {
         LOG(ERROR) << "failed to create remote_connected_fd remote_ip:" << remote_ip << " port"
                    << remote_port;
@@ -81,6 +83,39 @@ void run() {
 int main(int argc, char const *argv[]) {
     google::InitGoogleLogging("INFO");
     FLAGS_logtostderr = true;
-    run();
+    if(argc != 2){
+        LOG(ERROR)<<"usage:"<<argv[0]<<" config_json_path";
+        return 0;
+    }
+    const std::string config_file_path(argv[1]);
+    run(config_file_path);
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
