@@ -10,7 +10,6 @@
 #include <unordered_set>
 #include "connection_manager.h"
 #include "parse_config.h"
-#include "random_generator.h"
 #include "tool.h"
 
 void run(const std::string& config_file_path) {
