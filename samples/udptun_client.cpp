@@ -35,6 +35,7 @@ void run(const std::string& config_file_path) {
     auto ret = AddEvent2Epoll(epoll_fd, local_listen_fd, EPOLLIN);
     if (ret != 0) {
         close(local_listen_fd);
+        close(epoll_fd);
         LOG(INFO) << "add local_udp_listen_fd to epoll failed, error:" << strerror(errno);
         return;
     }
@@ -44,11 +45,14 @@ void run(const std::string& config_file_path) {
         LOG(ERROR) << "failed to create remote_connected_fd remote_ip:" << remote_ip << " port"
                    << remote_port;
         close(local_listen_fd);
+        close(epoll_fd);
         return;
     }
     ret = AddEvent2Epoll(epoll_fd, remote_connected_fd, EPOLLIN);
     if (ret != 0) {
         close(remote_connected_fd);
+        close(epoll_fd);
+        close(local_listen_fd);
         LOG(INFO) << "add local_udp_listen_fd failed, error:" << strerror(errno);
         return;
     }
@@ -56,7 +60,7 @@ void run(const std::string& config_file_path) {
     remote_ip_port.ip = remote_ip;
     remote_ip_port.port = remote_port;
     ConnectionManager connection_manager(epoll_fd, remote_ip_port, local_listen_fd, remote_connected_fd);
-    while (1) {
+    while (true) {
         int nfds = epoll_wait(epoll_fd, events, max_events, -1);
         if (nfds < 0) {
             if (errno == EINTR) {

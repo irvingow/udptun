@@ -23,6 +23,7 @@ class Connection : public boost::noncopyable {
   char send_buf_[BUF_SIZE];
   int32_t send_buf_len_;
  private:
+  ///对于server端,listen_fd_是-1,而对于client端,listen_fd_就是client在本地监听的fd
   int32_t listen_fd_;
   std::unordered_map<int32_t , uint32_t > connected_fd2conn_id_hashmap_;
   std::unordered_map<uint32_t , int32_t > conn_id2connected_fd_hashmap_;

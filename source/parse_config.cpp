@@ -18,7 +18,9 @@ system_config_t::system_config_t(const std::string &config_file_path) {
         remote_port = 0;
         parse_flag = false;
     }
-    parse_flag = true;
+    else{
+        parse_flag = true;
+    }
 }
 
 int32_t system_config_t::parse_config_json(const std::string &config_file_path) {
